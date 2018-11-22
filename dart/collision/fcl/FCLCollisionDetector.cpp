@@ -656,6 +656,20 @@ std::shared_ptr<FCLCollisionDetector> FCLCollisionDetector::create()
 }
 
 //==============================================================================
+void FCLCollisionDetector::usePartialEval()
+{
+  mPartialEvalFlag = true;
+}
+
+//==============================================================================
+std::vector<narrowPhaseData> FCLCollisionDetector::getPartialEvalRes()
+{
+  std::vector<narrowPhaseData> copied = mPartialEvalRes;
+  mPartialEvalRes.clear();
+  return copied;
+}
+
+//==============================================================================
 FCLCollisionDetector::~FCLCollisionDetector()
 {
   assert(mShapeMap.empty());

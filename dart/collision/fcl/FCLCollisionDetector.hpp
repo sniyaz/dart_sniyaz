@@ -40,22 +40,28 @@
 namespace dart {
 namespace collision {
 
+// (sniyaz) NOTE: Used for storing data needed to do narrow-phase detection
+// after broad-phase.
+struct narrowPhaseData
+{
+  dart::collision::fcl::CollisionObject* o1;
+  dart::collision::fcl::CollisionObject* o2;
+  void* cdata;
+} ;
+
 class FCLCollisionObject;
 
 class FCLCollisionDetector : public CollisionDetector
 {
 public:
+  // Flag for partial evaluation for LEMUR.
+  bool mPartialEvalFlag = false;
+  std::vector<narrowPhaseData> mPartialEvalRes;
 
-  // (sniyaz) NOTE: Used for storing data needed to do narrow-phase detection
-  // after broad-phase.
-  struct narrowPhaseData
-  {
-    dart::collision::fcl::CollisionObject* o1;
-    dart::collision::fcl::CollisionObject* o2;
-    void* cdata;
-  } ;
-
-  std::vector<narrowPhaseData> partialEvalRes;
+  // Flip on partial evaluation.
+  void usePartialEval();
+  // Get the results of a partial evaluation, and empty mPartialEvalRes.
+  std::vector<narrowPhaseData> getPartialEvalRes();
 
   static std::shared_ptr<FCLCollisionDetector> create();
 
