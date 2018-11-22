@@ -814,7 +814,12 @@ bool FCLCollisionDetector::collide(
         option, result, mPrimitiveShapeType,
         mContactPointComputationMethod);
 
-  casted->getFCLCollisionManager()->collide(&collData, collisionCallback);
+  // NOTE: If we're using partial eval, use the callback that only stores the
+  // narrow phase params for later (instead of running the narrow phase).
+  if (mPartialEvalFlag)
+    casted->getFCLCollisionManager()->collide(&collData, partialCallback);
+  else
+    casted->getFCLCollisionManager()->collide(&collData, collisionCallback);
 
   return collData.isCollision();
 }
@@ -848,7 +853,10 @@ bool FCLCollisionDetector::collide(
   auto broadPhaseAlg1 = casted1->getFCLCollisionManager();
   auto broadPhaseAlg2 = casted2->getFCLCollisionManager();
 
-  broadPhaseAlg1->collide(broadPhaseAlg2, &collData, collisionCallback);
+  if (mPartialEvalFlag)
+    broadPhaseAlg1->collide(broadPhaseAlg2, &collData, partialCallback);
+  else
+    broadPhaseAlg1->collide(broadPhaseAlg2, &collData, collisionCallback);
 
   return collData.isCollision();
 }
