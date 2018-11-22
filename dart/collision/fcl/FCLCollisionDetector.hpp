@@ -62,6 +62,10 @@ public:
   void usePartialEval();
   // Get the results of a partial evaluation, and empty mPartialEvalRes.
   std::vector<narrowPhaseData> getPartialEvalRes();
+  // Using partial results, complete collision detection.
+  bool completeNarrowEval(std::vector<narrowPhaseData>& partialRes);
+
+  bool evalNarrowPhase(std::vector<narrowPhaseData>& partialEvalRes);
 
   static std::shared_ptr<FCLCollisionDetector> create();
 

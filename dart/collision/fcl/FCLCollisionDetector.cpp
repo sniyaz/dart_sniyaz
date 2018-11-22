@@ -670,6 +670,73 @@ std::vector<narrowPhaseData> FCLCollisionDetector::getPartialEvalRes()
 }
 
 //==============================================================================
+bool FCLCollisionDetector::completeNarrowEval(
+  std::vector<narrowPhaseData>& partialEvalRes
+) {
+  void* cdata = partialEvalRes.at(0).cdata;
+  auto collData = static_cast<FCLCollisionCallbackData*>(cdata);
+
+  for (narrowPhaseData& curData : partialEvalRes)
+  {
+     fcl::CollisionObject* o1 = curData.o1;
+     fcl::CollisionObject* o2 = curData.o2;
+
+     const auto& fclRequest  = collData->fclRequest;
+           auto& fclResult   = collData->fclResult;
+           auto* result      = collData->result;
+     const auto& option      = collData->option;
+     const auto& filter      = option.collisionFilter;
+
+     // Filtering
+     if (filter)
+     {
+       auto collisionObject1 = static_cast<FCLCollisionObject*>(o1->getUserData());
+       auto collisionObject2 = static_cast<FCLCollisionObject*>(o2->getUserData());
+       assert(collisionObject1);
+       assert(collisionObject2);
+
+       if (filter->ignoresCollision(collisionObject2, collisionObject1))
+         continue;
+     }
+
+     // Clear previous results
+     fclResult.clear();
+
+     // Perform narrow-phase detection
+     ::fcl::collide(o1, o2, fclRequest, fclResult);
+
+     if (result)
+     {
+       // Post processing -- converting fcl contact information to ours if needed
+       if (FCLCollisionDetector::DART == collData->contactPointComputationMethod
+           && FCLCollisionDetector::MESH == collData->primitiveShapeType)
+       {
+         postProcessDART(fclResult, o1, o2, option, *result);
+       }
+       else
+       {
+         postProcessFCL(fclResult, o1, o2, option, *result);
+       }
+
+       // Check satisfaction of the stopping conditions
+       if (result->getNumContacts() >= option.maxNumContacts)
+         break;
+     }
+     else
+     {
+       // If no result is passed, stop checking when the first contact is found
+       if (fclResult.isCollision())
+       {
+         collData->foundCollision = true;
+         break;
+       }
+     }
+  }
+
+  return collData->isCollision();
+}
+
+//==============================================================================
 FCLCollisionDetector::~FCLCollisionDetector()
 {
   assert(mShapeMap.empty());
