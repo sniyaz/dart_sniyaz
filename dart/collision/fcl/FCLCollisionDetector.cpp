@@ -55,6 +55,9 @@
 namespace dart {
 namespace collision {
 
+// NOTE: Init in source file.
+std::vector<narrowPhaseData> mPartialEvalRes;
+
 namespace {
 
 bool collisionCallback(

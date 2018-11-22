@@ -49,6 +49,9 @@ struct narrowPhaseData
   void* cdata;
 } ;
 
+// NOTE: Global because callback issues.
+extern std::vector<narrowPhaseData> mPartialEvalRes;
+
 class FCLCollisionObject;
 
 class FCLCollisionDetector : public CollisionDetector
@@ -56,7 +59,6 @@ class FCLCollisionDetector : public CollisionDetector
 public:
   // Flag for partial evaluation for LEMUR.
   bool mPartialEvalFlag = false;
-  std::vector<narrowPhaseData> mPartialEvalRes;
 
   // Flip on partial evaluation.
   void usePartialEval();
