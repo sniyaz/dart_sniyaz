@@ -65,6 +65,11 @@ bool collisionCallback(
     dart::collision::fcl::CollisionObject* o2,
     void* cdata);
 
+bool partialCallback(
+    dart::collision::fcl::CollisionObject* o1,
+    dart::collision::fcl::CollisionObject* o2,
+    void* cdata);
+
 bool distanceCallback(
     dart::collision::fcl::CollisionObject* o1,
     dart::collision::fcl::CollisionObject* o2,
@@ -1216,6 +1221,24 @@ bool collisionCallback(
     }
   }
 
+  return collData->done;
+}
+
+//==============================================================================
+bool partialCallback(
+    dart::collision::fcl::CollisionObject* o1,
+    dart::collision::fcl::CollisionObject* o2,
+    void* cdata
+) {
+  // NOTE: This is a sign that we need to run a narrow-phase check. Save the
+  // params for that so we can run it later (in a LEMUR setup) *if* we want to.
+  narrowPhaseData curNarrowData;
+  curNarrowData.o1 = o1;
+  curNarrowData.o2 = o2;
+  curNarrowData.cdata = cdata;
+  mPartialEvalRes.push_back(curNarrowData);
+
+  auto collData = static_cast<FCLCollisionCallbackData*>(cdata);
   return collData->done;
 }
 
