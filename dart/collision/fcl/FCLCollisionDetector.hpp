@@ -46,6 +46,17 @@ class FCLCollisionDetector : public CollisionDetector
 {
 public:
 
+  // (sniyaz) NOTE: Used for storing data needed to do narrow-phase detection
+  // after broad-phase.
+  struct narrowPhaseData
+  {
+    dart::collision::fcl::CollisionObject* o1;
+    dart::collision::fcl::CollisionObject* o2;
+    void* cdata;
+  } ;
+
+  std::vector<narrowPhaseData> partialEvalRes;
+
   static std::shared_ptr<FCLCollisionDetector> create();
 
   /// Whether to use analytic collision checking for primitive shapes.
