@@ -821,7 +821,18 @@ bool FCLCollisionDetector::collide(
   else
     casted->getFCLCollisionManager()->collide(&collData, collisionCallback);
 
-  return collData.isCollision();
+  // NOTE: If we're doing partial eval, mPartialEvalRes being filled means the
+  // broad phase hit something and now it's time for a narrow phase. Return
+  // true to let the user know this.
+  if (mPartialEvalFlag)
+  {
+    if (mPartialEvalRes.size() > 0)
+      return true;
+    else
+      return false;
+  }
+  else
+    return collData.isCollision();
 }
 
 //==============================================================================
@@ -858,7 +869,18 @@ bool FCLCollisionDetector::collide(
   else
     broadPhaseAlg1->collide(broadPhaseAlg2, &collData, collisionCallback);
 
-  return collData.isCollision();
+  // NOTE: If we're doing partial eval, mPartialEvalRes being filled means the
+  // broad phase hit something and now it's time for a narrow phase. Return
+  // true to let the user know this.
+  if (mPartialEvalFlag)
+  {
+    if (mPartialEvalRes.size() > 0)
+      return true;
+    else
+      return false;
+  }
+  else
+    return collData.isCollision();
 }
 
 //==============================================================================
