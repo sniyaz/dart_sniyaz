@@ -46,7 +46,6 @@ struct narrowPhaseData
 {
   dart::collision::fcl::CollisionObject* o1;
   dart::collision::fcl::CollisionObject* o2;
-  void* cdata;
 } ;
 
 // NOTE: Global because callback issues.
@@ -65,7 +64,10 @@ public:
   // Get the results of a partial evaluation, and empty mPartialEvalRes.
   std::vector<narrowPhaseData> getPartialEvalRes();
   // Using partial results, complete collision detection.
-  bool completeNarrowEval(std::vector<narrowPhaseData>& partialRes);
+  bool completeNarrowEval(
+    std::vector<narrowPhaseData>& partialEvalRes,
+    const CollisionOption& option,
+    CollisionResult* result);
 
   bool evalNarrowPhase(std::vector<narrowPhaseData>& partialEvalRes);
 

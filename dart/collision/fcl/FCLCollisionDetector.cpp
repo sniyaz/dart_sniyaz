@@ -679,20 +679,22 @@ std::vector<narrowPhaseData> FCLCollisionDetector::getPartialEvalRes()
 
 //==============================================================================
 bool FCLCollisionDetector::completeNarrowEval(
-  std::vector<narrowPhaseData>& partialEvalRes
+  std::vector<narrowPhaseData>& partialEvalRes,
+  const CollisionOption& option,
+  CollisionResult* result
 ) {
-  void* cdata = partialEvalRes.at(0).cdata;
-  auto collData = static_cast<FCLCollisionCallbackData*>(cdata);
+  FCLCollisionCallbackData collData(
+        option, result, mPrimitiveShapeType, mContactPointComputationMethod);
 
   for (narrowPhaseData& curData : partialEvalRes)
   {
      fcl::CollisionObject* o1 = curData.o1;
      fcl::CollisionObject* o2 = curData.o2;
 
-     const auto& fclRequest  = collData->fclRequest;
-           auto& fclResult   = collData->fclResult;
-           auto* result      = collData->result;
-     const auto& option      = collData->option;
+     const auto& fclRequest  = collData.fclRequest;
+           auto& fclResult   = collData.fclResult;
+           auto* result      = collData.result;
+     const auto& option      = collData.option;
      const auto& filter      = option.collisionFilter;
 
      // Filtering
@@ -716,8 +718,8 @@ bool FCLCollisionDetector::completeNarrowEval(
      if (result)
      {
        // Post processing -- converting fcl contact information to ours if needed
-       if (FCLCollisionDetector::DART == collData->contactPointComputationMethod
-           && FCLCollisionDetector::MESH == collData->primitiveShapeType)
+       if (FCLCollisionDetector::DART == collData.contactPointComputationMethod
+           && FCLCollisionDetector::MESH == collData.primitiveShapeType)
        {
          postProcessDART(fclResult, o1, o2, option, *result);
        }
@@ -735,13 +737,13 @@ bool FCLCollisionDetector::completeNarrowEval(
        // If no result is passed, stop checking when the first contact is found
        if (fclResult.isCollision())
        {
-         collData->foundCollision = true;
+         collData.foundCollision = true;
          break;
        }
      }
   }
 
-  return collData->isCollision();
+  return collData.isCollision();
 }
 
 //==============================================================================
@@ -1260,15 +1262,16 @@ bool partialCallback(
     dart::collision::fcl::CollisionObject* o2,
     void* cdata
 ) {
+  auto collData = static_cast<FCLCollisionCallbackData*>(cdata);
+
+
   // NOTE: This is a sign that we need to run a narrow-phase check. Save the
   // params for that so we can run it later (in a LEMUR setup) *if* we want to.
   narrowPhaseData curNarrowData;
   curNarrowData.o1 = o1;
   curNarrowData.o2 = o2;
-  curNarrowData.cdata = cdata;
   mPartialEvalRes.push_back(curNarrowData);
 
-  auto collData = static_cast<FCLCollisionCallbackData*>(cdata);
   return collData->done;
 }
 
