@@ -35,6 +35,8 @@
 
 #include "dart/collision/CollisionGroup.hpp"
 #include "dart/collision/fcl/BackwardCompatibility.hpp"
+// NOTE (sniyaz): For the custom AABB.
+#include "dart/collision/fcl/family_AABB_tree.hpp"
 
 namespace dart {
 namespace collision {
@@ -48,7 +50,7 @@ public:
 
   friend class FCLCollisionDetector;
 
-  using FCLCollisionManager = dart::collision::fcl::DynamicAABBTreeCollisionManager;
+  using FCLCollisionManager = ::fcl::FamilyAABBTreeCollisionManager;
 
   /// Constructor
   FCLCollisionGroup(const CollisionDetectorPtr& collisionDetector);

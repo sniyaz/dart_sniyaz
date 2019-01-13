@@ -42,7 +42,7 @@ namespace collision {
 FCLCollisionGroup::FCLCollisionGroup(
     const CollisionDetectorPtr& collisionDetector)
   : CollisionGroup(collisionDetector),
-    mBroadPhaseAlg(new dart::collision::fcl::DynamicAABBTreeCollisionManager())
+    mBroadPhaseAlg(new ::fcl::FamilyAABBTreeCollisionManager())
 {
   // Do nothing
 }
