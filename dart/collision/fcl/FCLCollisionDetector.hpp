@@ -40,16 +40,17 @@
 namespace dart {
 namespace collision {
 
-// (sniyaz) NOTE: Used for storing data needed to do narrow-phase detection
-// after broad-phase.
-struct narrowPhaseData
-{
-  dart::collision::fcl::CollisionObject* o1;
-  dart::collision::fcl::CollisionObject* o2;
-} ;
-
-// NOTE: Global because callback issues.
-extern std::vector<narrowPhaseData> mPartialEvalRes;
+// TODO: (sniyaz) Don't think we need this now?
+// // (sniyaz) NOTE: Used for storing data needed to do narrow-phase detection
+// // after broad-phase.
+// struct narrowPhaseData
+// {
+//   dart::collision::fcl::CollisionObject* o1;
+//   dart::collision::fcl::CollisionObject* o2;
+// } ;
+//
+// // NOTE: Global because callback issues.
+// extern std::vector<narrowPhaseData> mPartialEvalRes;
 
 class FCLCollisionObject;
 
@@ -61,15 +62,15 @@ public:
 
   // Flip on partial evaluation.
   void usePartialEval();
-  // Get the results of a partial evaluation, and empty mPartialEvalRes.
-  std::vector<narrowPhaseData> getPartialEvalRes();
+  // TODO: (sniyaz) Don't think we need this now?
+  // // Get the results of a partial evaluation, and empty mPartialEvalRes.
+  // std::vector<narrowPhaseData> getPartialEvalRes();
   // Using partial results, complete collision detection.
   bool completeNarrowEval(
-    std::vector<narrowPhaseData>& partialEvalRes,
-    const CollisionOption& option,
-    CollisionResult* result);
-
-  bool evalNarrowPhase(std::vector<narrowPhaseData>& partialEvalRes);
+    CollisionGroup* group1,
+    CollisionGroup* group2,
+    const CollisionOption& option = CollisionOption(false, 1u, nullptr),
+    CollisionResult* result = nullptr);
 
   static std::shared_ptr<FCLCollisionDetector> create();
 

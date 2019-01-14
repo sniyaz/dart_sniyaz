@@ -55,8 +55,9 @@
 namespace dart {
 namespace collision {
 
-// NOTE: Init in source file.
-std::vector<narrowPhaseData> mPartialEvalRes;
+// TODO: (sniyaz) Don't think we need this now?
+// // NOTE: Init in source file.
+// std::vector<narrowPhaseData> mPartialEvalRes;
 
 namespace {
 
@@ -65,10 +66,11 @@ bool collisionCallback(
     dart::collision::fcl::CollisionObject* o2,
     void* cdata);
 
-bool partialCallback(
-    dart::collision::fcl::CollisionObject* o1,
-    dart::collision::fcl::CollisionObject* o2,
-    void* cdata);
+// TODO: (sniyaz) Don't think we need this now?
+// bool partialCallback(
+//     dart::collision::fcl::CollisionObject* o1,
+//     dart::collision::fcl::CollisionObject* o2,
+//     void* cdata);
 
 bool distanceCallback(
     dart::collision::fcl::CollisionObject* o1,
@@ -669,82 +671,14 @@ void FCLCollisionDetector::usePartialEval()
   mPartialEvalFlag = true;
 }
 
-//==============================================================================
-std::vector<narrowPhaseData> FCLCollisionDetector::getPartialEvalRes()
-{
-  std::vector<narrowPhaseData> copied = mPartialEvalRes;
-  mPartialEvalRes.clear();
-  return copied;
-}
-
-//==============================================================================
-bool FCLCollisionDetector::completeNarrowEval(
-  std::vector<narrowPhaseData>& partialEvalRes,
-  const CollisionOption& option,
-  CollisionResult* result
-) {
-  FCLCollisionCallbackData collData(
-        option, result, mPrimitiveShapeType, mContactPointComputationMethod);
-
-  for (narrowPhaseData& curData : partialEvalRes)
-  {
-     fcl::CollisionObject* o1 = curData.o1;
-     fcl::CollisionObject* o2 = curData.o2;
-
-     const auto& fclRequest  = collData.fclRequest;
-           auto& fclResult   = collData.fclResult;
-           auto* result      = collData.result;
-     const auto& option      = collData.option;
-     const auto& filter      = option.collisionFilter;
-
-     // Filtering
-     if (filter)
-     {
-       auto collisionObject1 = static_cast<FCLCollisionObject*>(o1->getUserData());
-       auto collisionObject2 = static_cast<FCLCollisionObject*>(o2->getUserData());
-       assert(collisionObject1);
-       assert(collisionObject2);
-
-       if (filter->ignoresCollision(collisionObject2, collisionObject1))
-         continue;
-     }
-
-     // Clear previous results
-     fclResult.clear();
-
-     // Perform narrow-phase detection
-     ::fcl::collide(o1, o2, fclRequest, fclResult);
-
-     if (result)
-     {
-       // Post processing -- converting fcl contact information to ours if needed
-       if (FCLCollisionDetector::DART == collData.contactPointComputationMethod
-           && FCLCollisionDetector::MESH == collData.primitiveShapeType)
-       {
-         postProcessDART(fclResult, o1, o2, option, *result);
-       }
-       else
-       {
-         postProcessFCL(fclResult, o1, o2, option, *result);
-       }
-
-       // Check satisfaction of the stopping conditions
-       if (result->getNumContacts() >= option.maxNumContacts)
-         break;
-     }
-     else
-     {
-       // If no result is passed, stop checking when the first contact is found
-       if (fclResult.isCollision())
-       {
-         collData.foundCollision = true;
-         break;
-       }
-     }
-  }
-
-  return collData.isCollision();
-}
+// TODO: (sniyaz) Don't think we need this now?
+// //==============================================================================
+// std::vector<narrowPhaseData> FCLCollisionDetector::getPartialEvalRes()
+// {
+//   std::vector<narrowPhaseData> copied = mPartialEvalRes;
+//   mPartialEvalRes.clear();
+//   return copied;
+// }
 
 //==============================================================================
 FCLCollisionDetector::~FCLCollisionDetector()
@@ -852,22 +786,47 @@ bool FCLCollisionDetector::collide(
   auto broadPhaseAlg2 = casted2->getFCLCollisionManager();
 
   if (mPartialEvalFlag)
-    broadPhaseAlg1->collide(broadPhaseAlg2, &collData, partialCallback);
+    return broadPhaseAlg1->collideBound(broadPhaseAlg2);
   else
-    broadPhaseAlg1->collide(broadPhaseAlg2, &collData, collisionCallback);
-
-  // NOTE: If we're doing partial eval, mPartialEvalRes being filled means the
-  // broad phase hit something and now it's time for a narrow phase. Return
-  // true to let the user know this.
-  if (mPartialEvalFlag)
   {
-    if (mPartialEvalRes.size() > 0)
-      return true;
-    else
-      return false;
-  }
-  else
+    broadPhaseAlg1->collide(broadPhaseAlg2, &collData, collisionCallback);
     return collData.isCollision();
+  }
+}
+
+//==============================================================================
+bool FCLCollisionDetector::completeNarrowEval(
+  CollisionGroup* group1, CollisionGroup* group2,
+    const CollisionOption& option, CollisionResult* result
+) {
+  if (result)
+    result->clear();
+
+  if (0u == option.maxNumContacts)
+    return false;
+
+  if (!checkGroupValidity(this, group1))
+    return false;
+
+  if (!checkGroupValidity(this, group2))
+    return false;
+
+  auto casted1 = static_cast<FCLCollisionGroup*>(group1);
+  auto casted2 = static_cast<FCLCollisionGroup*>(group2);
+  casted1->updateEngineData();
+  casted2->updateEngineData();
+
+  FCLCollisionCallbackData collData(
+        option, result, mPrimitiveShapeType,
+        mContactPointComputationMethod);
+
+  auto broadPhaseAlg1 = casted1->getFCLCollisionManager();
+  auto broadPhaseAlg2 = casted2->getFCLCollisionManager();
+
+  // NOTE: FINISH the rest of the BVH recursion.
+  broadPhaseAlg1->collideFinish(broadPhaseAlg2, &collData, collisionCallback);
+
+  return collData.isCollision();
 }
 
 //==============================================================================
@@ -1241,24 +1200,25 @@ bool collisionCallback(
   return collData->done;
 }
 
-//==============================================================================
-bool partialCallback(
-    dart::collision::fcl::CollisionObject* o1,
-    dart::collision::fcl::CollisionObject* o2,
-    void* cdata
-) {
-  auto collData = static_cast<FCLCollisionCallbackData*>(cdata);
-
-
-  // NOTE: This is a sign that we need to run a narrow-phase check. Save the
-  // params for that so we can run it later (in a LEMUR setup) *if* we want to.
-  narrowPhaseData curNarrowData;
-  curNarrowData.o1 = o1;
-  curNarrowData.o2 = o2;
-  mPartialEvalRes.push_back(curNarrowData);
-
-  return collData->done;
-}
+  // TODO: (sniyaz) Don't think we need this now?
+// //==============================================================================
+// bool partialCallback(
+//     dart::collision::fcl::CollisionObject* o1,
+//     dart::collision::fcl::CollisionObject* o2,
+//     void* cdata
+// ) {
+//   auto collData = static_cast<FCLCollisionCallbackData*>(cdata);
+//
+//
+//   // NOTE: This is a sign that we need to run a narrow-phase check. Save the
+//   // params for that so we can run it later (in a LEMUR setup) *if* we want to.
+//   narrowPhaseData curNarrowData;
+//   curNarrowData.o1 = o1;
+//   curNarrowData.o2 = o2;
+//   mPartialEvalRes.push_back(curNarrowData);
+//
+//   return collData->done;
+// }
 
 //==============================================================================
 bool distanceCallback(
