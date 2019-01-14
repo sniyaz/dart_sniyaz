@@ -804,6 +804,20 @@ void FamilyAABBTreeCollisionManager::collide(BroadPhaseCollisionManager* other_m
   details::family_AABB_tree::collisionRecurse(dtree.getRoot(), other_manager->dtree.getRoot(), cdata, callback);
 }
 
+/// NOTE (sniyaz): Just test the top levels of each BVH to get a SUPER conservative check.
+bool FamilyAABBTreeCollisionManager::collideBound(BroadPhaseCollisionManager* other_manager_, void* cdata, CollisionCallBack callback) const
+{
+  FamilyAABBTreeCollisionManager* other_manager = static_cast<FamilyAABBTreeCollisionManager*>(other_manager_);
+  // TODO: What boolean val to return here?
+  if((size() == 0) || (other_manager->size() == 0)) return true;
+
+  // Just check the roots of each tree.
+  if (dtree.getRoot()->bv.overlap(other_manager->dtree.getRoot()->bv))
+    return true;
+  else
+    return false;
+}
+
 void FamilyAABBTreeCollisionManager::distance(BroadPhaseCollisionManager* other_manager_, void* cdata, DistanceCallBack callback) const
 {
   FamilyAABBTreeCollisionManager* other_manager = static_cast<FamilyAABBTreeCollisionManager*>(other_manager_);
