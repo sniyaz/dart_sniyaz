@@ -805,7 +805,7 @@ void FamilyAABBTreeCollisionManager::collide(BroadPhaseCollisionManager* other_m
 }
 
 /// NOTE (sniyaz): Just test the top levels of each BVH to get a SUPER conservative check.
-bool FamilyAABBTreeCollisionManager::collideBound(BroadPhaseCollisionManager* other_manager_, void* cdata, CollisionCallBack callback) const
+bool FamilyAABBTreeCollisionManager::collideBound(BroadPhaseCollisionManager* other_manager_) const
 {
   FamilyAABBTreeCollisionManager* other_manager = static_cast<FamilyAABBTreeCollisionManager*>(other_manager_);
   // TODO: What boolean val to return here?

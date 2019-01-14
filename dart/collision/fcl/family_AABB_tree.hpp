@@ -132,7 +132,10 @@ public:
   void collide(BroadPhaseCollisionManager* other_manager_, void* cdata, CollisionCallBack callback) const;
 
   /// NOTE (sniyaz): Just test the top levels of each BVH to get a SUPER conservative check.
-  bool collideBound(BroadPhaseCollisionManager* other_manager_, void* cdata, CollisionCallBack callback) const;
+  bool collideBound(BroadPhaseCollisionManager* other_manager_) const;
+
+  /// NOTE (sniyaz): Once collideBound, finish the recursion and return the final result.
+  void collideFinish(BroadPhaseCollisionManager* other_manager_, void* cdata, CollisionCallBack callback) const;
 
   /// @brief perform distance test with objects belonging to another manager
   void distance(BroadPhaseCollisionManager* other_manager_, void* cdata, DistanceCallBack callback) const;
