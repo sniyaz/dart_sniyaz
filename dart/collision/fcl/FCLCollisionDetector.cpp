@@ -795,6 +795,7 @@ static bool checkGroupValidity(FCLCollisionDetector* cd, CollisionGroup* group)
 }
 
 //==============================================================================
+// NOTE: This is for self checks. We don't do partial eval with that, so fuck it.
 bool FCLCollisionDetector::collide(
     CollisionGroup* group,
     const CollisionOption& option,
@@ -816,25 +817,9 @@ bool FCLCollisionDetector::collide(
         option, result, mPrimitiveShapeType,
         mContactPointComputationMethod);
 
-  // NOTE: If we're using partial eval, use the callback that only stores the
-  // narrow phase params for later (instead of running the narrow phase).
-  if (mPartialEvalFlag)
-    casted->getFCLCollisionManager()->collide(&collData, partialCallback);
-  else
-    casted->getFCLCollisionManager()->collide(&collData, collisionCallback);
+  casted->getFCLCollisionManager()->collide(&collData, collisionCallback);
 
-  // NOTE: If we're doing partial eval, mPartialEvalRes being filled means the
-  // broad phase hit something and now it's time for a narrow phase. Return
-  // true to let the user know this.
-  if (mPartialEvalFlag)
-  {
-    if (mPartialEvalRes.size() > 0)
-      return true;
-    else
-      return false;
-  }
-  else
-    return collData.isCollision();
+  return collData.isCollision();
 }
 
 //==============================================================================
