@@ -818,6 +818,31 @@ bool FamilyAABBTreeCollisionManager::collideBound(BroadPhaseCollisionManager* ot
     return false;
 }
 
+/// NOTE (sniyaz): Once collideBound, finish the recursion and return the final result.
+void FamilyAABBTreeCollisionManager::collideFinish(BroadPhaseCollisionManager* other_manager_, void* cdata, CollisionCallBack callback) const
+{
+  FamilyAABBTreeCollisionManager* other_manager = static_cast<FamilyAABBTreeCollisionManager*>(other_manager_);
+  if((size() == 0) || (other_manager->size() == 0)) return;
+
+  FamilyAABBTreeCollisionManager::DynamicAABBNode* root1 = dtree.getRoot();
+  FamilyAABBTreeCollisionManager::DynamicAABBNode* root2 = other_manager->dtree.getRoot();
+
+  if(root2->isLeaf() || (!root1->isLeaf() && (root1->bv.size() > root2->bv.size())))
+  {
+    if(details::family_AABB_tree::collisionRecurse(root1->children[0], root2, cdata, callback))
+      return;
+    if(details::family_AABB_tree::collisionRecurse(root1->children[1], root2, cdata, callback))
+      return;
+  }
+  else
+  {
+    if(details::family_AABB_tree::collisionRecurse(root1, root2->children[0], cdata, callback))
+      return;
+    if(details::family_AABB_tree::collisionRecurse(root1, root2->children[1], cdata, callback))
+      return;
+  }
+}
+
 void FamilyAABBTreeCollisionManager::distance(BroadPhaseCollisionManager* other_manager_, void* cdata, DistanceCallBack callback) const
 {
   FamilyAABBTreeCollisionManager* other_manager = static_cast<FamilyAABBTreeCollisionManager*>(other_manager_);
